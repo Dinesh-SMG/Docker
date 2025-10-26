@@ -1,0 +1,19 @@
+# Use a Node.js long-term support (LTS) image
+FROM node:lts
+
+# Set the working directory inside the container
+WORKDIR /usr/src/app
+
+# Copy a dummy package.json and install dependencies (for caching benefit)
+# In a real app, you'd copy package.json and run 'npm install'
+COPY . /usr/src/app
+
+# Create a placeholder JavaScript file to run
+RUN echo "console.log('Hello from Docker Node.js!');" > index.js
+
+# Expose the port the application would listen on (even though this example doesn't run a server)
+EXPOSE 3000
+
+# Define the command to run the script
+CMD [ "node", "index.js" ]
+

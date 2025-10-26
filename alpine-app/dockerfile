@@ -1,0 +1,17 @@
+# Use the smallest base image available
+FROM alpine:latest
+
+# Set metadata for the maintainer
+LABEL maintainer="docker-practice@example.com"
+
+# Install the figlet package (a text banner generator) and remove the package cache immediately
+# This keeps the image size minimal
+RUN apk add --no-cache figlet
+
+# Set the working directory (optional for a utility, but good practice)
+WORKDIR /usr/app
+
+# Set the default command to run when the container starts
+# The container will run 'figlet' with a fixed message
+CMD ["figlet", "D O C K E R", "R O C K S"]
+
