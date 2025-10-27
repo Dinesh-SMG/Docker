@@ -1,0 +1,39 @@
+# ----------------------------------------------------------------------
+# Stage 1: Build (Install dependencies)
+# ----------------------------------------------------------------------
+FROM node:lts-alpine AS build
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy package.json and package-lock.json first to leverage Docker's cache.
+# If these files don't change, 'npm install' won't rerun.
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy the rest of the application source code
+COPY . .
+
+# ----------------------------------------------------------------------
+# Stage 2: Final (The production environment)
+# ----------------------------------------------------------------------
+FROM node:lts-alpine
+
+# Set non-root user for security best practice
+RUN adduser -D appuser
+USER appuser
+
+WORKDIR /app
+
+# Copy only the installed node modules and the built application code from the 'build' stage
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/package*.json ./
+COPY --from=build /app/server.js .
+
+# Expose the port the Node app is listening on
+EXPOSE 3000
+
+# Command to run the application when the container starts
+CMD ["npm", "start"]

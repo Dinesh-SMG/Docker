@@ -1,0 +1,45 @@
+# ----------------------------------------------------------------------
+# Stage 1: Builder (Used to compile the source code)
+# ----------------------------------------------------------------------
+# Use a JDK image suitable for building Maven projects
+FROM maven:3.9.5-eclipse-temurin-17 AS builder
+
+# Set an argument for the application home directory
+ARG APP_HOME=/home/app
+WORKDIR ${APP_HOME}
+
+# Copy only the pom.xml first to take advantage of Docker caching 
+COPY pom.xml .
+
+# Download dependencies based on pom.xml
+RUN mvn dependency:go-offline -B
+
+# Copy the source code
+COPY src ./src
+
+# Build the application
+RUN mvn clean package -DskipTests
+
+# ----------------------------------------------------------------------
+# Stage 2: Final Runtime Image (The secure and lean image)
+# ----------------------------------------------------------------------
+# Use a lightweight JRE (Java Runtime Environment) image
+FROM eclipse-temurin:17-jre-alpine
+
+# Set non-root user for security
+RUN addgroup --system spring && adduser --system --ingroup spring spring
+USER spring
+
+# Set environment variable for the application home directory
+ENV APP_HOME=/app
+WORKDIR ${APP_HOME}
+
+# Copy the executable JAR from the 'builder' stage
+# The name MUST match the artifactId from pom.xml: java-docker-app
+COPY --from=builder /home/app/target/java-docker-app-0.0.1-SNAPSHOT.jar app.jar
+
+# Expose the default Spring Boot port
+EXPOSE 8080
+
+# Command to run the application when the container starts
+ENTRYPOINT ["java", "-jar", "app.jar"]
