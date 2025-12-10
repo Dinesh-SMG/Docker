@@ -1,16 +1,13 @@
-FROM ubuntu:22.04
+FROM nginx:alpine
 
-# Install basic tools
-RUN apt-get update && apt-get install -y \
-    curl \
-    git \
-    vim \
-    && rm -rf /var/lib/apt/lists/*
+# Remove default nginx page
+RUN rm -rf /usr/share/nginx/html/*
 
-WORKDIR /app
+# Copy your HTML website into nginx directory
+COPY . /usr/share/nginx/html/
 
-# Copy project files
-COPY . .
+# Expose port 80
+EXPOSE 80
 
-# Default command (modify based on your app)
-CMD ["bash"]
+# nginx entrypoint (default)
+CMD ["nginx", "-g", "daemon off;"]
